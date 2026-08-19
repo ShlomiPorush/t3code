@@ -467,6 +467,7 @@ function MarkdownTable({ children, ...props }: React.ComponentProps<"table">) {
       ref={containerRef}
       className="chat-markdown-table-container"
       data-expanded={expanded ? "true" : "false"}
+      dir="ltr"
     >
       <ScrollArea
         chainVerticalScroll
@@ -1302,6 +1303,7 @@ const MarkdownFileLink = memo(function MarkdownFileLink({
       <TooltipTrigger
         render={
           <a
+            dir="ltr"
             href={href}
             className={cn(CHAT_FILE_TAG_CHIP_CLASS_NAME, MARKDOWN_FILE_LINK_CLASS_NAME, className)}
             data-markdown-copy={copyMarkdown}
@@ -1732,6 +1734,12 @@ function ChatMarkdown({
       },
       table({ node: _node, ...props }) {
         return <MarkdownTable {...props} />;
+      },
+      th({ node: _node, ...props }) {
+        return <th {...props} dir="auto" />;
+      },
+      td({ node: _node, ...props }) {
+        return <td {...props} dir="auto" />;
       },
       details({ node: _node, children, open: detailsOpen }) {
         return <MarkdownDetails open={detailsOpen}>{children}</MarkdownDetails>;

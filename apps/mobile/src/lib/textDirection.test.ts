@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { resolveTextDirection } from "./textDirection";
+import { resolveMarkdownTextDirection, resolveTextDirection } from "./textDirection";
 
 describe("resolveTextDirection", () => {
   it("resolves Hebrew and Arabic text as right-to-left", () => {
@@ -20,5 +20,11 @@ describe("resolveTextDirection", () => {
 
   it("defaults neutral-only content to left-to-right", () => {
     expect(resolveTextDirection("👋 123...")).toBe("ltr");
+  });
+
+  it("ignores inline and fenced code when resolving markdown prose", () => {
+    expect(resolveMarkdownTextDirection("`npm` שלום")).toBe("rtl");
+    expect(resolveMarkdownTextDirection("```sh\nnpm test\n```\n\nשלום")).toBe("rtl");
+    expect(resolveMarkdownTextDirection("`שלום` English prose")).toBe("ltr");
   });
 });

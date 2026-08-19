@@ -51,7 +51,7 @@ import { scopedThreadKey } from "../../lib/scopedEntities";
 import { copyTextWithHaptic } from "../../lib/copyTextWithHaptic";
 import { tryOpenExternalUrl } from "../../lib/openExternalUrl";
 import { hasWideMarkdownBlock } from "../../lib/wideMarkdownBlocks";
-import { resolveTextDirection } from "../../lib/textDirection";
+import { resolveMarkdownTextDirection } from "../../lib/textDirection";
 import {
   hasNativeSelectableMarkdownText,
   SelectableMarkdownText,
@@ -806,7 +806,7 @@ const NitroMarkdownMessage = memo(function NitroMarkdownMessage(props: {
       ...props.markdownStyles.styles,
       paragraph: {
         ...props.markdownStyles.styles.paragraph,
-        direction: resolveTextDirection(props.text),
+        direction: resolveMarkdownTextDirection(props.text),
       },
     }),
     [props.markdownStyles.styles, props.text],

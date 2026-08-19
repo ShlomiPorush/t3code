@@ -495,16 +495,36 @@ describe("MessagesTimeline", () => {
     const markup = renderToStaticMarkup(
       <MessagesTimeline
         {...buildProps()}
+        markdownCwd="/workspace"
         timelineEntries={[
           buildAssistantTimelineEntry(
-            ["הרץ `vp test` ואז:", "", "```sh", "vp test run", "```"].join("\n"),
+            ["בדוק את `src/index.ts` והריץ `vp test` ואז:", "", "```sh", "vp test run", "```"].join(
+              "\n",
+            ),
           ),
         ]}
       />,
     );
 
+    expect(markup).toMatch(/<a[^>]*dir="ltr"[^>]*class="[^"]*chat-markdown-file-link/);
     expect(markup).toMatch(/<code[^>]*dir="ltr"[^>]*>vp test<\/code>/);
     expect(markup).toMatch(/class="chat-markdown-codeblock[^"]*"[^>]*dir="ltr"/);
+  });
+
+  it("keeps table structure left-to-right while resolving each cell direction", () => {
+    const markup = renderToStaticMarkup(
+      <MessagesTimeline
+        {...buildProps()}
+        timelineEntries={[
+          buildAssistantTimelineEntry(
+            ["| Name | תיאור |", "| --- | --- |", "| test | בדיקה |"].join("\n"),
+          ),
+        ]}
+      />,
+    );
+
+    expect(markup).toMatch(/class="chat-markdown-table-container"[^>]*dir="ltr"/);
+    expect(markup.match(/<(?:th|td)[^>]*dir="auto"/g)).toHaveLength(4);
   });
 
   it("preserves arbitrary XML-like tags and comparisons in rendered user messages", async () => {
