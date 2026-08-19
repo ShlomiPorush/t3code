@@ -674,6 +674,7 @@ function MarkdownCodeBlock({
       className="chat-markdown-codeblock my-[0.65rem] overflow-hidden rounded-[var(--radius)] border border-border/70 bg-secondary leading-snug dark:border-transparent dark:bg-input/32"
       data-language={language}
       data-wrap={wrapped ? "true" : "false"}
+      dir="ltr"
     >
       <div className="chat-markdown-codeblock-header flex items-center justify-between gap-2 pt-1.5 pr-1.5 pb-0 pl-3 select-none">
         <span className="inline-flex min-w-0 items-center gap-[0.4rem] [font-family:var(--font-mono,ui-monospace,SFMono-Regular,monospace)] [font-size:0.6875rem]">
@@ -1724,7 +1725,7 @@ function ChatMarkdown({
           }
         }
         return (
-          <code {...props} className={className}>
+          <code {...props} className={className} dir="ltr">
             {children}
           </code>
         );
@@ -1738,7 +1739,11 @@ function ChatMarkdown({
       pre({ node, children, ...props }) {
         const codeBlock = extractCodeBlock(children);
         if (!codeBlock) {
-          return <pre {...props}>{children}</pre>;
+          return (
+            <pre {...props} dir="ltr">
+              {children}
+            </pre>
+          );
         }
 
         const language = extractFenceLanguage(codeBlock.className);
@@ -1750,8 +1755,20 @@ function ChatMarkdown({
             fenceTitle={fenceTitle}
             theme={resolvedTheme}
           >
-            <RenderErrorBoundary fallback={<pre {...props}>{children}</pre>}>
-              <Suspense fallback={<pre {...props}>{children}</pre>}>
+            <RenderErrorBoundary
+              fallback={
+                <pre {...props} dir="ltr">
+                  {children}
+                </pre>
+              }
+            >
+              <Suspense
+                fallback={
+                  <pre {...props} dir="ltr">
+                    {children}
+                  </pre>
+                }
+              >
                 <SuspenseShikiCodeBlock
                   className={codeBlock.className}
                   code={codeBlock.code}
@@ -1792,6 +1809,7 @@ function ChatMarkdown({
         "chat-markdown w-full min-w-0 text-sm leading-relaxed text-foreground/80 [overflow-wrap:anywhere] [word-break:break-word]",
         className,
       )}
+      dir="auto"
       onCopy={handleCopy}
     >
       <ReactMarkdown
