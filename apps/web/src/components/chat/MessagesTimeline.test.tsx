@@ -527,6 +527,18 @@ describe("MessagesTimeline", () => {
     expect(markup.match(/<(?:th|td)[^>]*dir="auto"/g)).toHaveLength(4);
   });
 
+  it("uses logical spacing for GitHub alerts inside auto-directed messages", () => {
+    const markup = renderToStaticMarkup(
+      <MessagesTimeline
+        {...buildProps()}
+        timelineEntries={[buildAssistantTimelineEntry("> [!NOTE]\n> הודעת התראה בעברית.")]}
+      />,
+    );
+
+    expect(markup).toMatch(/<div role="note" class="[^"]*border-s-2[^"]*ps-3/);
+    expect(markup).not.toContain("border-l-2");
+  });
+
   it("preserves arbitrary XML-like tags and comparisons in rendered user messages", async () => {
     const { MessagesTimeline } = await import("./MessagesTimeline");
     const markup = renderToStaticMarkup(
