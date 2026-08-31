@@ -79,7 +79,7 @@ import { copyTextWithHaptic } from "../../lib/copyTextWithHaptic";
 import { tryOpenExternalUrl } from "../../lib/openExternalUrl";
 import { downloadAndShareAttachment } from "../../lib/attachmentDownload";
 import { hasWideMarkdownBlock } from "../../lib/wideMarkdownBlocks";
-import { resolveMarkdownTextDirection } from "../../lib/textDirection";
+import { resolveMarkdownTextDirection, type TextDirection } from "../../lib/textDirection";
 import {
   hasNativeSelectableMarkdownText,
   SelectableMarkdownText,
@@ -514,7 +514,7 @@ interface MarkdownStyleSets {
 interface MarkdownStyleSet {
   readonly theme: PartialMarkdownTheme;
   readonly styles: NodeStyleOverrides;
-  readonly renderers: CustomRenderers;
+  readonly renderers: Readonly<Record<TextDirection, CustomRenderers>>;
   readonly nativeTextStyle: NativeMarkdownTextStyle;
 }
 
@@ -642,21 +642,51 @@ const NitroMarkdownMessage = memo(function NitroMarkdownMessage(props: {
   readonly text: string;
   readonly markdownStyles: MarkdownStyleSet;
 }) {
+  const direction = resolveMarkdownTextDirection(props.text);
   const styles = useMemo<NodeStyleOverrides>(
     () => ({
       ...props.markdownStyles.styles,
+      document: {
+        ...props.markdownStyles.styles.document,
+        direction,
+      },
       paragraph: {
         ...props.markdownStyles.styles.paragraph,
-        direction: resolveMarkdownTextDirection(props.text),
+        direction,
+      },
+      list: {
+        ...props.markdownStyles.styles.list,
+        direction,
+      },
+      list_item: {
+        ...props.markdownStyles.styles.list_item,
+        direction,
+      },
+      task_list_item: {
+        ...props.markdownStyles.styles.task_list_item,
+        direction,
+      },
+      blockquote: {
+        ...props.markdownStyles.styles.blockquote,
+        direction,
+        ...(direction === "rtl"
+          ? {
+              borderLeftWidth: 0,
+              borderRightWidth: props.markdownStyles.styles.blockquote?.borderLeftWidth,
+              borderRightColor: props.markdownStyles.styles.blockquote?.borderLeftColor,
+              paddingLeft: 0,
+              paddingRight: props.markdownStyles.styles.blockquote?.paddingLeft,
+            }
+          : null),
       },
     }),
-    [props.markdownStyles.styles, props.text],
+    [direction, props.markdownStyles.styles],
   );
 
   return (
     <Markdown
       options={{ gfm: true }}
-      renderers={props.markdownStyles.renderers}
+      renderers={props.markdownStyles.renderers[direction]}
       styles={styles}
       theme={props.markdownStyles.theme}
     >
@@ -975,6 +1005,7 @@ function useMarkdownStyles(
       copyTintColor: ColorValue,
       preserveSoftBreaks: boolean,
       highlightCode: boolean,
+      direction: TextDirection,
     ): CustomRenderers => ({
       link: ({ children, href = "" }) => {
         const presentation = resolveMarkdownLinkPresentation(href);
@@ -1022,7 +1053,7 @@ function useMarkdownStyles(
         );
       },
       list: ({ node, Renderer, ordered = false, start = 1 }) => (
-        <View className="mt-0.5 mb-2">
+        <View className="mt-0.5 mb-2" style={{ direction }}>
           {node.children?.map((child, index) => {
             const childKey = `${child.type}:${child.beg ?? "unknown"}:${child.end ?? "unknown"}`;
             if (child.type === "task_list_item") {
@@ -1031,16 +1062,21 @@ function useMarkdownStyles(
               );
             }
             return (
-              <View className="mb-[3px] flex-row items-start" key={childKey}>
+              <View
+                className="mb-[3px] items-start"
+                key={childKey}
+                style={{ flexDirection: direction === "rtl" ? "row-reverse" : "row" }}
+              >
                 <NativeText
                   className="font-sans"
                   style={{
                     width: ordered ? 22 : 12,
-                    marginRight: 5,
+                    marginLeft: direction === "rtl" ? 5 : 0,
+                    marginRight: direction === "rtl" ? 0 : 5,
                     color: inlineTextColor,
                     fontSize: markdownFontSizes.m,
                     lineHeight: markdownFontSizes.bodyLineHeight,
-                    textAlign: ordered ? "right" : "center",
+                    textAlign: ordered ? (direction === "rtl" ? "left" : "right") : "center",
                   }}
                 >
                   {ordered ? `${start + index}.` : "•"}
@@ -1100,6 +1136,37 @@ function useMarkdownStyles(
       ),
     });
 
+    const createDirectionalMarkdownRenderers = (
+      inlineTextColor: string,
+      inlineCodeTextColor: string,
+      blockBackgroundColor: string,
+      blockTextColor: string,
+      copyTintColor: ColorValue,
+      preserveSoftBreaks: boolean,
+      highlightCode: boolean,
+    ): Readonly<Record<TextDirection, CustomRenderers>> => ({
+      ltr: createMarkdownRenderers(
+        inlineTextColor,
+        inlineCodeTextColor,
+        blockBackgroundColor,
+        blockTextColor,
+        copyTintColor,
+        preserveSoftBreaks,
+        highlightCode,
+        "ltr",
+      ),
+      rtl: createMarkdownRenderers(
+        inlineTextColor,
+        inlineCodeTextColor,
+        blockBackgroundColor,
+        blockTextColor,
+        copyTintColor,
+        preserveSoftBreaks,
+        highlightCode,
+        "rtl",
+      ),
+    });
+
     const userTheme: PartialMarkdownTheme = {
       ...baseTheme,
       colors: {
@@ -1149,7 +1216,7 @@ function useMarkdownStyles(
       user: {
         theme: userTheme,
         styles: userStyles,
-        renderers: createMarkdownRenderers(
+        renderers: createDirectionalMarkdownRenderers(
           markdownUserCodeText,
           markdownUserInlineCodeText,
           markdownUserFenceBg,
@@ -1182,7 +1249,7 @@ function useMarkdownStyles(
       assistant: {
         theme: assistantTheme,
         styles: assistantStyles,
-        renderers: createMarkdownRenderers(
+        renderers: createDirectionalMarkdownRenderers(
           markdownCodeText,
           markdownInlineCodeText,
           markdownCodeBg,
