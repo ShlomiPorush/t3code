@@ -1065,11 +1065,7 @@ function useMarkdownStyles(
               );
             }
             return (
-              <View
-                className="mb-[3px] items-start"
-                key={childKey}
-                style={{ flexDirection: direction === "rtl" ? "row-reverse" : "row" }}
-              >
+              <View className="mb-[3px] flex-row items-start" key={childKey}>
                 <NativeText
                   className="font-sans"
                   style={{
