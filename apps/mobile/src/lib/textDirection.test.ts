@@ -27,4 +27,12 @@ describe("resolveTextDirection", () => {
     expect(resolveMarkdownTextDirection("```sh\nnpm test\n```\n\nשלום")).toBe("rtl");
     expect(resolveMarkdownTextDirection("`שלום` English prose")).toBe("ltr");
   });
+
+  it("does not close a long fence at a shorter nested marker", () => {
+    expect(
+      resolveMarkdownTextDirection(
+        "````text\n``` nested marker\nEnglish inside the fence\n````\n\nשלום",
+      ),
+    ).toBe("rtl");
+  });
 });
