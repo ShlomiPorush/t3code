@@ -24,8 +24,14 @@ describe("resolveTextDirection", () => {
 
   it("ignores inline and fenced code when resolving markdown prose", () => {
     expect(resolveMarkdownTextDirection("`npm` שלום")).toBe("rtl");
+    expect(resolveMarkdownTextDirection("``English `code` inside`` שלום")).toBe("rtl");
     expect(resolveMarkdownTextDirection("```sh\nnpm test\n```\n\nשלום")).toBe("rtl");
     expect(resolveMarkdownTextDirection("`שלום` English prose")).toBe("ltr");
+  });
+
+  it("ignores indented code blocks when resolving markdown prose", () => {
+    expect(resolveMarkdownTextDirection("    English command\n\nשלום")).toBe("rtl");
+    expect(resolveMarkdownTextDirection(">     English command\n\nשלום")).toBe("rtl");
   });
 
   it("does not close a long fence at a shorter nested marker", () => {

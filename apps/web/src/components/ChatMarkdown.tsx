@@ -2148,12 +2148,9 @@ function ChatMarkdown({
         // text under a colored title — which is how the host renders it.
         return (
           <div role="note" className={cn("my-1 border-s-2 ps-3", alert.borderClassName)}>
-            <p
-              className={cn("flex items-center gap-1.5 font-medium", alert.titleClassName)}
-              dir="ltr"
-            >
+            <p className={cn("flex items-center gap-1.5 font-medium", alert.titleClassName)}>
               <alert.Icon aria-hidden className="size-3.5 shrink-0" />
-              {alert.label}
+              <bdi>{alert.label}</bdi>
             </p>
             {children}
           </div>
