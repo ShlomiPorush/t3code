@@ -892,6 +892,7 @@ describe("MessagesTimeline", () => {
     );
 
     expect(markup).toMatch(/<div role="note" class="[^"]*border-s-2[^"]*ps-3/);
+    expect(markup).toMatch(/<p class="[^"]*font-medium[^"]*" dir="ltr"/);
     expect(markup).not.toContain("border-l-2");
   });
 

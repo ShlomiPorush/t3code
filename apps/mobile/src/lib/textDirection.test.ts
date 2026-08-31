@@ -35,4 +35,14 @@ describe("resolveTextDirection", () => {
       ),
     ).toBe("rtl");
   });
+
+  it("handles fenced code with legacy line endings and blockquote prefixes", () => {
+    expect(resolveMarkdownTextDirection("```sh\rnpm test\r```\r\rשלום")).toBe("rtl");
+    expect(resolveMarkdownTextDirection("> ```\n> שלום\n> ```\n\nEnglish prose")).toBe("ltr");
+  });
+
+  it("ignores GitHub alert markers when resolving the prose direction", () => {
+    expect(resolveMarkdownTextDirection("> [!NOTE]\n> הודעת התראה בעברית.")).toBe("rtl");
+    expect(resolveMarkdownTextDirection("> [!WARNING]\n> English warning.")).toBe("ltr");
+  });
 });

@@ -4,13 +4,15 @@ const LETTER_CHARACTER = /^\p{Letter}$/u;
 const RTL_SCRIPT_CHARACTER =
   /^[\u0590-\u08ff\ufb1d-\ufdff\ufe70-\ufeff\u{10800}-\u{10fff}\u{1e800}-\u{1eeff}]$/u;
 const INLINE_MARKDOWN_CODE = /`[^`\n]*`/g;
+const GITHUB_ALERT_MARKER =
+  /^ {0,3}(?:> {0,3})+\[!(?:NOTE|TIP|IMPORTANT|WARNING|CAUTION)\][\t ]*$/gimu;
 
 function stripFencedMarkdownCode(markdown: string): string {
   let fence: { character: "`" | "~"; length: number } | undefined;
   const proseLines: string[] = [];
 
-  for (const line of markdown.split(/\r?\n/)) {
-    const fenceLine = line.match(/^ {0,3}(`{3,}|~{3,})(.*)$/);
+  for (const line of markdown.split(/\r\n|\r|\n/)) {
+    const fenceLine = line.match(/^ {0,3}(?:> {0,3})*(`{3,}|~{3,})(.*)$/);
 
     if (!fence) {
       const marker = fenceLine?.[1];
@@ -47,5 +49,9 @@ export function resolveTextDirection(text: string): TextDirection {
 }
 
 export function resolveMarkdownTextDirection(markdown: string): TextDirection {
-  return resolveTextDirection(stripFencedMarkdownCode(markdown).replace(INLINE_MARKDOWN_CODE, ""));
+  return resolveTextDirection(
+    stripFencedMarkdownCode(markdown)
+      .replace(GITHUB_ALERT_MARKER, "")
+      .replace(INLINE_MARKDOWN_CODE, ""),
+  );
 }
