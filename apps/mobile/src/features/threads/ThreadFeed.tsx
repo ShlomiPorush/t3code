@@ -40,6 +40,7 @@ import {
 } from "react";
 import {
   Markdown,
+  parseMarkdown,
   type CustomRenderers,
   type NodeStyleOverrides,
   type PartialMarkdownTheme,
@@ -79,7 +80,7 @@ import { copyTextWithHaptic } from "../../lib/copyTextWithHaptic";
 import { tryOpenExternalUrl } from "../../lib/openExternalUrl";
 import { downloadAndShareAttachment } from "../../lib/attachmentDownload";
 import { hasWideMarkdownBlock } from "../../lib/wideMarkdownBlocks";
-import { resolveMarkdownTextDirection, type TextDirection } from "../../lib/textDirection";
+import { resolveMarkdownNodeTextDirection, type TextDirection } from "../../lib/textDirection";
 import {
   hasNativeSelectableMarkdownText,
   SelectableMarkdownText,
@@ -642,7 +643,8 @@ const NitroMarkdownMessage = memo(function NitroMarkdownMessage(props: {
   readonly text: string;
   readonly markdownStyles: MarkdownStyleSet;
 }) {
-  const direction = resolveMarkdownTextDirection(props.text);
+  const sourceAst = useMemo(() => parseMarkdown(props.text, { gfm: true }), [props.text]);
+  const direction = resolveMarkdownNodeTextDirection(sourceAst);
   const styles = useMemo<NodeStyleOverrides>(
     () => ({
       ...props.markdownStyles.styles,
@@ -687,6 +689,7 @@ const NitroMarkdownMessage = memo(function NitroMarkdownMessage(props: {
     <Markdown
       options={{ gfm: true }}
       renderers={props.markdownStyles.renderers[direction]}
+      sourceAst={sourceAst}
       styles={styles}
       theme={props.markdownStyles.theme}
     >

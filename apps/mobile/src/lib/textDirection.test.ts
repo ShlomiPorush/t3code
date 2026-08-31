@@ -1,6 +1,12 @@
+import type { MarkdownNode } from "react-native-nitro-markdown";
 import { describe, expect, it } from "vite-plus/test";
 
-import { resolveMarkdownTextDirection, resolveTextDirection } from "./textDirection";
+import { resolveMarkdownNodeTextDirection, resolveTextDirection } from "./textDirection";
+
+const documentWith = (...children: MarkdownNode[]): MarkdownNode => ({
+  type: "document",
+  children,
+});
 
 describe("resolveTextDirection", () => {
   it("resolves Hebrew and Arabic text as right-to-left", () => {
@@ -22,33 +28,48 @@ describe("resolveTextDirection", () => {
     expect(resolveTextDirection("👋 123...")).toBe("ltr");
   });
 
-  it("ignores inline and fenced code when resolving markdown prose", () => {
-    expect(resolveMarkdownTextDirection("`npm` שלום")).toBe("rtl");
-    expect(resolveMarkdownTextDirection("``English `code` inside`` שלום")).toBe("rtl");
-    expect(resolveMarkdownTextDirection("```sh\nnpm test\n```\n\nשלום")).toBe("rtl");
-    expect(resolveMarkdownTextDirection("`שלום` English prose")).toBe("ltr");
-  });
-
-  it("ignores indented code blocks when resolving markdown prose", () => {
-    expect(resolveMarkdownTextDirection("    English command\n\nשלום")).toBe("rtl");
-    expect(resolveMarkdownTextDirection(">     English command\n\nשלום")).toBe("rtl");
-  });
-
-  it("does not close a long fence at a shorter nested marker", () => {
+  it("uses parsed prose instead of code content", () => {
     expect(
-      resolveMarkdownTextDirection(
-        "````text\n``` nested marker\nEnglish inside the fence\n````\n\nשלום",
+      resolveMarkdownNodeTextDirection(
+        documentWith(
+          { type: "code_block", content: "npm test" },
+          {
+            type: "paragraph",
+            children: [
+              { type: "code_inline", content: "English inline code" },
+              { type: "text", content: " שלום" },
+            ],
+          },
+        ),
       ),
     ).toBe("rtl");
+
+    expect(
+      resolveMarkdownNodeTextDirection(
+        documentWith({
+          type: "paragraph",
+          children: [
+            { type: "code_inline", content: "שלום" },
+            { type: "text", content: " English prose" },
+          ],
+        }),
+      ),
+    ).toBe("ltr");
   });
 
-  it("handles fenced code with legacy line endings and blockquote prefixes", () => {
-    expect(resolveMarkdownTextDirection("```sh\rnpm test\r```\r\rשלום")).toBe("rtl");
-    expect(resolveMarkdownTextDirection("> ```\n> שלום\n> ```\n\nEnglish prose")).toBe("ltr");
-  });
-
-  it("ignores GitHub alert markers when resolving the prose direction", () => {
-    expect(resolveMarkdownTextDirection("> [!NOTE]\n> הודעת התראה בעברית.")).toBe("rtl");
-    expect(resolveMarkdownTextDirection("> [!WARNING]\n> English warning.")).toBe("ltr");
+  it("ignores synthesized GitHub alert markers", () => {
+    expect(
+      resolveMarkdownNodeTextDirection(
+        documentWith({
+          type: "blockquote",
+          children: [
+            {
+              type: "paragraph",
+              children: [{ type: "text", content: "[!NOTE] הודעת התראה בעברית." }],
+            },
+          ],
+        }),
+      ),
+    ).toBe("rtl");
   });
 });
